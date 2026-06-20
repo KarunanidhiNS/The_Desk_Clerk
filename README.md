@@ -287,23 +287,6 @@ New Delhi is the capital of India. It serves as the seat of all three branches o
 
 ---
 
-# 📈 Resume Highlights
-
-This project demonstrates practical knowledge of:
-
-* Artificial Intelligence
-* Retrieval-Augmented Generation (RAG)
-* Semantic Search
-* Vector Databases
-* Information Retrieval
-* Natural Language Processing (NLP)
-* Flask Development
-* Machine Learning Concepts
-* Embedding Models
-* FAISS Indexing
-
----
-
 # 👨‍💻 Author
 
 Karunanidhi N S
