@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Desk Clerk — Document Intelligence</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+</head>
+<body>
+
+<div class="desk">
+
+  <svg class="clip" viewBox="0 0 54 88" xmlns="http://www.w3.org/2000/svg">
+    <path d="M27 4 C13 4 6 14 6 26 L6 62 C6 76 16 84 27 84 C38 84 46 77 46 65 L46 30 C46 22 41 17 34 17 C27 17 23 22 23 29 L23 60"
+          fill="none" stroke="#a9772f" stroke-width="6" stroke-linecap="round"/>
+    <path d="M27 4 C13 4 6 14 6 26 L6 62 C6 76 16 84 27 84 C38 84 46 77 46 65 L46 30 C46 22 41 17 34 17 C27 17 23 22 23 29 L23 60"
+          fill="none" stroke="#7e5a22" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+  </svg>
+
+  <div class="folder">
+
+    <div class="folder-head">
+      <div>
+        <p class="case-no">Case File No. 0192&nbsp;&mdash;&nbsp; Opened on intake</p>
+        <h1>The Desk Clerk</h1>
+        <p>Hand over a document and it answers from what's actually written inside &mdash; nothing looked up, nothing made up.</p>
+      </div>
+      <div class="badge">Local&nbsp;Records<br>Only</div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="intake" type="button">Intake Document</button>
+      <button class="tab-btn" data-tab="interview" type="button">Question the File</button>
+    </div>
+
+    <div class="panels">
+
+      <!-- INTAKE PANEL -->
+      <section class="panel active" id="panel-intake">
+        <form action="/upload" method="POST" enctype="multipart/form-data" id="upload-form">
+          <label class="field-label">Step 1 — Submit the document</label>
+
+          <div class="dropzone" id="dropzone">
+            <input type="file" name="pdf" id="pdf-input" accept=".pdf" required>
+            <div class="dz-icon">
+              <svg viewBox="0 0 38 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 3h22l10 10v30H3V3z" stroke="#a9772f" stroke-width="2.2" stroke-linejoin="round"/>
+                <path d="M25 3v10h10" stroke="#a9772f" stroke-width="2.2" stroke-linejoin="round"/>
+                <path d="M11 24h16M11 31h16M11 18h8" stroke="#a9772f" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="dz-title">Drop the PDF here, or click to browse</div>
+            <div class="dz-sub">ONE FILE &middot; PROCESSED ENTIRELY ON THIS MACHINE</div>
+            <div class="file-name" id="file-name"></div>
+          </div>
+
+          <button class="btn" type="submit">File It Away</button>
+          <p class="hint">Once filed, every question below is checked against this document only.</p>
+        </form>
+      </section>
+
+      <!-- INTERVIEW PANEL -->
+      <section class="panel" id="panel-interview">
+        <form action="/ask" method="POST" id="ask-form">
+          <label class="field-label">Step 2 — Put it to the file</label>
+          <input type="text" name="question" placeholder="e.g. What does the document say about&hellip;" required>
+          <button class="btn" type="submit">Ask the File</button>
+          <p class="hint">If it isn't in there, the clerk will say so &mdash; it won't guess.</p>
+        </form>
+
+        <div class="slip-wrap">
+          <div class="slip {% if answer %}reveal{% endif %}" id="slip">
+            <div class="slip-head">
+              <span class="tag">Reply on Record</span>
+              {% if answer %}
+              <span class="stamp punch">On File</span>
+              {% endif %}
+            </div>
+            <div class="slip-body {% if not answer %}empty{% endif %}" id="slip-body">{% if answer %}{{ answer }}{% else %}Nothing filed yet. Submit a document, then ask it something.{% endif %}</div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <footer>Filed offline &middot; no document ever leaves this desk</footer>
+</div>
+
+<script>
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const panels = { intake: document.getElementById('panel-intake'), interview: document.getElementById('panel-interview') };
+
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      Object.values(panels).forEach(p => p.classList.remove('active'));
+      panels[btn.dataset.tab].classList.add('active');
+    });
+  });
+
+  // If an answer came back from the server, make sure the interview tab is showing
+  document.addEventListener('DOMContentLoaded', () => {
+    const slip = document.getElementById('slip');
+    if (slip && slip.classList.contains('reveal')) {
+      tabBtns.forEach(b => b.classList.remove('active'));
+      document.querySelector('[data-tab="interview"]').classList.add('active');
+      Object.values(panels).forEach(p => p.classList.remove('active'));
+      panels.interview.classList.add('active');
+    }
+  });
+
+  // Dropzone interactivity
+  const dropzone = document.getElementById('dropzone');
+  const pdfInput = document.getElementById('pdf-input');
+  const fileName = document.getElementById('file-name');
+
+  pdfInput.addEventListener('change', () => {
+    if (pdfInput.files.length) {
+      fileName.textContent = '\u2713 ' + pdfInput.files[0].name;
+      fileName.classList.add('show');
+    }
+  });
+
+  ['dragenter', 'dragover'].forEach(evt =>
+    dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add('drag'); })
+  );
+  ['dragleave', 'drop'].forEach(evt =>
+    dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.remove('drag'); })
+  );
+  dropzone.addEventListener('drop', e => {
+    if (e.dataTransfer.files.length) {
+      pdfInput.files = e.dataTransfer.files;
+      fileName.textContent = '\u2713 ' + e.dataTransfer.files[0].name;
+      fileName.classList.add('show');
+    }
+  });
+</script>
+
+</body>
+</html>
